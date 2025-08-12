@@ -1,8 +1,8 @@
 <template>
   <div>
-    <n-alert title="接口定义到测试场景" type="info" class="mt-4">
-      左侧为接口定义（树形）,支持把接口定义拖拽到右侧,构成测试场景。
-    </n-alert>
+<!--    <n-alert title="接口定义到测试场景" type="info" class="mt-4">-->
+<!--      左侧为接口定义（树形）,支持把接口定义拖拽到右侧,构成测试场景。-->
+<!--    </n-alert>-->
 
     <div class="two-column mt-4">
       <!-- 左侧：Tree View（真实树形展示） -->
@@ -213,11 +213,11 @@
 
   /* 两侧宽度比例 2:3 */
   .left-panel {
-    flex: 2;
+    flex: 1;
     min-width: 220px;
   }
   .right-panel {
-    flex: 3;
+    flex: 2;
   }
 
   /* 在小屏幕上堆叠 */

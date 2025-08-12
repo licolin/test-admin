@@ -23,8 +23,8 @@
       <div class="scroll-content">
         <!-- 顶部按钮 -->
         <div class="top-bar">
-          <n-button type="primary">新建接口定义</n-button>
           <n-button type="info" @click="showCreateDirModal = true">创建接口目录</n-button>
+          <n-button type="primary" @click="handleCreateApi">新建接口定义</n-button>
           <n-button type="success">保存</n-button>
           <n-button>取消</n-button>
         </div>
@@ -47,11 +47,33 @@
               </n-form-item>
             </div>
             <!-- 请求参数 -->
-            <n-divider>请求参数</n-divider>
-            <n-data-table :columns="reqColumns" :data="reqParams" />
-            <n-button tertiary type="primary" @click="addReqParam" style="margin-top: 8px"
-              >+ 添加参数</n-button
-            >
+            <!--            <n-divider>请求参数</n-divider>-->
+            <!--            <n-data-table :columns="reqColumns" :data="reqParams" />-->
+            <!--            <n-button tertiary type="primary" @click="addReqParam" style="margin-top: 8px"-->
+            <!--            >+ 添加参数</n-button-->
+            <!--            >-->
+
+            <!--            &lt;!&ndash; 应答参数 &ndash;&gt;-->
+            <!--            <n-divider>应答参数</n-divider>-->
+            <!--            <n-data-table :columns="resColumns" :data="resParams" />-->
+            <!--            <n-button tertiary type="primary" @click="addResParam" style="margin-top: 8px"-->
+            <!--            >+ 添加参数</n-button-->
+            <!--            >-->
+            <!-- 参数Tabs -->
+            <n-tabs type="line" animated>
+              <n-tab-pane name="req" tab="请求参数">
+                <n-data-table :columns="reqColumns" :data="reqParams" />
+                <n-button tertiary type="primary" @click="addReqParam" style="margin-top: 8px"
+                  >+ 添加参数</n-button
+                >
+              </n-tab-pane>
+              <n-tab-pane name="res" tab="应答参数">
+                <n-data-table :columns="resColumns" :data="resParams" />
+                <n-button tertiary type="primary" @click="addResParam" style="margin-top: 8px"
+                  >+ 添加参数</n-button
+                >
+              </n-tab-pane>
+            </n-tabs>
           </n-form>
         </div>
       </div>
@@ -203,6 +225,7 @@
       },
     },
   ];
+
   // 可编辑的返回参数表头
   const resParams = ref([
     { name: 'code', type: 'string', desc: '' },
@@ -292,6 +315,16 @@
     showCreateDirModal.value = false;
     createDirForm.value.name = '';
     createDirForm.value.desc = '';
+  };
+  const handleCreateApi = () => {
+    form.value = {
+      name: '',
+      method: 'GET',
+      path: '',
+      group: '',
+    };
+    reqParams.value = [{ name: '', type: '', required: false, default: '', desc: '' }];
+    resParams.value = [{ name: '', type: '', desc: '' }];
   };
 </script>
 
