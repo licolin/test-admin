@@ -52,20 +52,6 @@
             <n-button tertiary type="primary" @click="addReqParam" style="margin-top: 8px"
               >+ 添加参数</n-button
             >
-            <!-- 返回参数 & Mock -->
-<!--            <div style="display: flex; gap: 16px; margin-top: 24px">-->
-<!--              <div style="flex: 1">-->
-<!--                <n-divider>返回参数</n-divider>-->
-<!--                <n-data-table :columns="resColumns" :data="resParams" />-->
-<!--                <n-button tertiary type="primary" @click="addResParam" style="margin-top: 8px"-->
-<!--                  >+ 添加参数</n-button-->
-<!--                >-->
-<!--              </div>-->
-<!--              <div style="flex: 1">-->
-<!--                <n-divider>Mock 数据</n-divider>-->
-<!--                <n-input type="textarea" v-model:value="mockData" :rows="8" />-->
-<!--              </div>-->
-<!--            </div>-->
           </n-form>
         </div>
       </div>
