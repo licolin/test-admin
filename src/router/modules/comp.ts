@@ -113,6 +113,15 @@ const routes: Array<RouteRecordRaw> = [
         },
         component: () => import('@/views/comp/drag/index.vue'),
       },
+      {
+        path: 'api',
+        name: `Api`,
+        meta: {
+          title: '接口定义',
+          extra: renderNew(),
+        },
+        component: () => import('@/views/comp/apidefinition/index.vue'),
+      },
     ],
   },
 ];
