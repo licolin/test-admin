@@ -1,9 +1,5 @@
 <template>
   <div>
-<!--    <n-alert title="接口定义到测试场景" type="info" class="mt-4">-->
-<!--      左侧为接口定义（树形）,支持把接口定义拖拽到右侧,构成测试场景。-->
-<!--    </n-alert>-->
-
     <div class="two-column mt-4">
       <!-- 左侧：Tree View（真实树形展示） -->
       <div class="left-panel">
@@ -16,13 +12,9 @@
             :selected-keys="selectedKeys"
             @update:selected-keys="handleTreeSelect"
           >
-            <!-- 为叶子节点渲染可拖拽标签 -->
             <template #label="{ option }">
               <div class="tree-node-label">
-                <!-- 如果有 children 则不是叶子，仅显示文字 -->
                 <span v-if="option.children" class="node-title">{{ option.label }}</span>
-
-                <!-- 叶子节点支持拖拽 -->
                 <span
                   v-else
                   class="node-title draggable-node"
@@ -37,46 +29,90 @@
         </n-card>
       </div>
 
-      <!-- 右侧：可拖拽的场景列表（并接收来自左侧的原生 drop） -->
+      <!-- 右侧：Tabs（场景、前置、后置） -->
       <div class="right-panel" @dragover.prevent @drop="onDrop">
         <n-card size="small" :bordered="false">
-          <template #header>
-            <div style="display: flex; justify-content: space-between; align-items: center">
-              <span>场景</span>
-              <n-button size="medium" type="primary" @click="editScene"> 场景编辑 </n-button>
-            </div>
-          </template>
-
-          <Draggable class="draggable-ul" animation="200" :list="taskList" itemKey="id">
-            <template #item="{ element, index }">
-              <div class="cursor-move draggable-li">
-                <div class="li-left">
-                  <n-tag type="info">任务</n-tag>
-                  <span class="ml-2">{{ element.name }}</span>
-                </div>
-                <div class="li-right">
-                  <n-button
-                    size="tiny"
-                    :style="{
-                      backgroundColor: '#409EFF',
-                      border: 'none',
-                      boxShadow: 'none',
-                      color: '#fff',
-                    }"
-                    @click="removeTask(index)"
-                  >
-                    删除
-                  </n-button>
-                </div>
+          <n-tabs v-model:value="activeTab" type="line" animated>
+            <n-tab-pane name="scene" tab="场景">
+              <Draggable class="draggable-ul" animation="200" :list="sceneList" itemKey="id">
+                <template #item="{ element, index }">
+                  <div class="cursor-move draggable-li">
+                    <div class="li-left">
+                      <n-tag type="info">任务</n-tag>
+                      <span class="ml-2">{{ element.name }}</span>
+                    </div>
+                    <div class="li-right">
+                      <n-button
+                        size="tiny"
+                        :style="{
+                          backgroundColor: '#409EFF',
+                          border: 'none',
+                          boxShadow: 'none',
+                          color: '#fff',
+                        }"
+                        @click="removeTask('scene', index)"
+                      >
+                        删除
+                      </n-button>
+                    </div>
+                  </div>
+                </template>
+                <template #footer>
+                  <div v-if="sceneList.length === 0" class="empty-tip">
+                    点击左侧接口,接口会被添加到场景列表
+                  </div>
+                </template>
+              </Draggable>
+            </n-tab-pane>
+            <n-tab-pane name="pre" tab="前置">
+              <div style="margin-bottom: 10px; display: flex; gap: 12px">
+                <n-select
+                  v-model:value="preLanguage"
+                  :options="languageOptions"
+                  style="width: 120px"
+                />
+                <n-select v-model:value="preTheme" :options="themeOptions" style="width: 120px" />
               </div>
-            </template>
-
-            <template #footer>
-              <div v-if="taskList.length === 0" class="empty-tip">
-                点击左侧接口,接口会被添加到场景列表
-              </div>
-            </template>
-          </Draggable>
+              <Codemirror
+                v-model="preCode"
+                :extensions="currentExtensions"
+                :style="{ height: '400px', border: '1px solid #eee' }"
+                placeholder="在这里编辑前置代码..."
+                :autofocus="true"
+                :indent-with-tab="true"
+                :tab-size="4"
+              />
+            </n-tab-pane>
+            <n-tab-pane name="post" tab="后置">
+              <Draggable class="draggable-ul" animation="200" :list="postList" itemKey="id">
+                <template #item="{ element, index }">
+                  <div class="cursor-move draggable-li">
+                    <div class="li-left">
+                      <n-tag type="warning">后置</n-tag>
+                      <span class="ml-2">{{ element.name }}</span>
+                    </div>
+                    <div class="li-right">
+                      <n-button
+                        size="tiny"
+                        :style="{
+                          backgroundColor: '#E6A23C',
+                          border: 'none',
+                          boxShadow: 'none',
+                          color: '#fff',
+                        }"
+                        @click="removeTask('post', index)"
+                      >
+                        删除
+                      </n-button>
+                    </div>
+                  </div>
+                </template>
+                <template #footer>
+                  <div v-if="postList.length === 0" class="empty-tip"> 可拖拽接口到后置 </div>
+                </template>
+              </Draggable>
+            </n-tab-pane>
+          </n-tabs>
         </n-card>
       </div>
     </div>
@@ -84,13 +120,13 @@
 </template>
 
 <script lang="ts" setup>
-  import { reactive, ref } from 'vue';
+  import { reactive, ref, computed } from 'vue';
   import Draggable from 'vuedraggable';
+  import { Codemirror } from 'vue-codemirror';
+  import { sql } from '@codemirror/lang-sql';
+  import { python } from '@codemirror/lang-python';
+  import { oneDark } from '@codemirror/theme-one-dark'; // 可选主题
 
-  /**
-   * 树形数据（保持原来结构）
-   * 每个叶子节点用 key 表示唯一 id，label 表示名称
-   */
   const treeData = reactive([
     {
       label: '前端开发',
@@ -119,25 +155,53 @@
     },
   ]);
 
-  // 右侧任务（场景）列表（可排序、可删除）
-  const taskList = reactive([] as Array<{ id: string | number; name: string }>);
+  const activeTab = ref<'scene' | 'pre' | 'post'>('scene');
 
-  // 选中的树节点（保留点击添加的行为）
+  // 场景和后置列表
+  const sceneList = reactive([] as Array<{ id: string | number; name: string }>);
+  const postList = reactive([] as Array<{ id: string | number; name: string }>);
+
+  // 前置代码编辑
+  const preCode = ref('');
+  const preLanguage = ref('sql');
+  const preTheme = ref('light');
+  const languageOptions = [
+    { label: 'SQL', value: 'sql' },
+    { label: 'Python', value: 'python' },
+  ];
+  const themeOptions = [
+    { label: '默认(light)', value: 'light' },
+    { label: 'One Dark', value: 'oneDark' },
+  ];
+
+  const currentExtensions = computed(() => {
+    let lang = preLanguage.value === 'sql' ? sql() : python();
+    let theme = preTheme.value === 'oneDark' ? oneDark : [];
+    // 返回一个包含语言和主题的数组
+    return [lang, ...(Array.isArray(theme) ? theme : [theme])];
+  });
+
+  // const extensionsSql = [sql(), oneDark];
+  // const extensionsPython = [python(), oneDark];
+  //
+  // const currentExtensions = computed(() => {
+  //   return preLanguage.value === 'sql' ? extensionsSql : extensionsPython;
+  // });
+
   const selectedKeys = ref<(string | number)[]>([]);
 
-  /* ==========  点击树节点添加（保留） ========== */
+  /* 点击树节点添加（仅添加到“场景”tab） */
   function handleTreeSelect(keys: (string | number)[]) {
     selectedKeys.value = keys;
     const key = keys[0];
     if (!key) return;
     const node = findTaskInTree(treeData, key);
-    // 仅当为叶子节点（没有 children）时才添加
-    if (node && !node.children && !taskList.find((t) => t.id === node.key)) {
-      taskList.push({ id: node.key, name: node.label });
+    if (node && !node.children && !sceneList.find((t) => t.id === node.key)) {
+      sceneList.push({ id: node.key, name: node.label });
     }
   }
 
-  /* 递归在树中查找节点 */
+  /* 递归查找节点 */
   function findTaskInTree(tree: any[], key: string | number) {
     for (const node of tree) {
       if (node.key === key) return node;
@@ -149,22 +213,17 @@
     return null;
   }
 
-  /* ========== 从左侧树原生拖拽到右侧 ========== */
-  /* dragstart：把节点信息序列化到 dataTransfer 中 */
+  /* 拖拽开始：把节点信息序列化到 dataTransfer 中 */
   function onDragStart(e: DragEvent, option: any) {
-    // 只允许拖拽叶子节点（template 中已仅对叶子节点绑定）
     const payload = { id: option.key, name: option.label };
     try {
       e.dataTransfer?.setData('application/json', JSON.stringify(payload));
-      // 便于在某些浏览器回退兼容
       e.dataTransfer?.setData('text/plain', String(option.key));
-    } catch (err) {
-      // 某些受限环境可能会抛错，忽略即可
-    }
+    } catch (err) {}
     if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copy';
   }
 
-  /* drop：从 dataTransfer 中读取数据并添加到 taskList（避免重复） */
+  /* 拖拽释放，根据当前tab添加到对应列表或代码 */
   function onDrop(e: DragEvent) {
     e.preventDefault();
     let raw = '';
@@ -174,33 +233,39 @@
     } catch (err) {
       raw = '';
     }
-
     if (!raw) return;
 
+    let obj: any = {};
     try {
-      const obj = JSON.parse(raw);
-      // 如果 data 为单个 key（text/plain），尝试从 tree 中查找 label
+      obj = JSON.parse(raw);
       if (!obj.name) {
         const node = findTaskInTree(treeData, obj.id || raw);
         if (node) obj.name = node.label;
       }
-      // 防重复
-      if (!taskList.find((t) => t.id === obj.id)) {
-        taskList.push({ id: obj.id, name: obj.name });
-      }
     } catch (err) {
-      // raw 可能只是 id 字符串
       const id = raw;
       const node = findTaskInTree(treeData, id);
-      if (node && !taskList.find((t) => t.id === node.key)) {
-        taskList.push({ id: node.key, name: node.label });
-      }
+      if (node) obj = { id: node.key, name: node.label };
+    }
+    if (!obj.id || !obj.name) return;
+
+    // 根据当前 tab 添加
+    if (activeTab.value === 'scene' && !sceneList.find((t) => t.id === obj.id)) {
+      sceneList.push({ id: obj.id, name: obj.name });
+    } else if (activeTab.value === 'pre') {
+      // 添加到前置代码作为注释
+      const comment = preLanguage.value === 'sql' ? `-- ${obj.name}\n` : `# ${obj.name}\n`;
+      preCode.value += `\n${comment}`;
+    } else if (activeTab.value === 'post' && !postList.find((t) => t.id === obj.id)) {
+      postList.push({ id: obj.id, name: obj.name });
     }
   }
 
-  /* ========== 右侧删除 ========== */
-  function removeTask(index: number) {
-    taskList.splice(index, 1);
+  /* 删除 */
+  function removeTask(type: 'scene' | 'pre' | 'post', index: number) {
+    if (type === 'scene') sceneList.splice(index, 1);
+    if (type === 'post') postList.splice(index, 1);
+    // pre 没有列表，无需删除
   }
 </script>
 
@@ -210,8 +275,6 @@
     gap: 12px;
     align-items: flex-start;
   }
-
-  /* 两侧宽度比例 2:3 */
   .left-panel {
     flex: 1;
     min-width: 220px;
@@ -220,20 +283,17 @@
     flex: 2;
   }
 
-  /* 在小屏幕上堆叠 */
+  /* 小屏幕堆叠 */
   @media (max-width: 640px) {
     .two-column {
       flex-direction: column;
     }
   }
-
-  /* 拖拽列表样式 */
   .draggable-ul {
     width: 100%;
     overflow: hidden;
     margin-top: -12px;
   }
-
   .draggable-li {
     width: 100%;
     padding: 12px 10px;
@@ -243,21 +303,15 @@
     justify-content: space-between;
     align-items: center;
   }
-
-  /* 树节点样式：叶子节点呈现为可拖拽的句柄 */
   .tree-node-label .draggable-node {
     cursor: grab;
     user-select: none;
     display: inline-block;
     padding: 2px 4px;
   }
-
-  /* 当被拖拽时的样式提示（仅视觉） */
   .tree-node-label .draggable-node:active {
     cursor: grabbing;
   }
-
-  /* 空列表提示 */
   .empty-tip {
     padding: 12px;
     color: #888;
