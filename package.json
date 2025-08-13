@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@alova/mock": "^2.0.6",
+    "@codemirror/lang-json": "^6.0.2",
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/lang-sql": "^6.9.1",
     "@codemirror/theme-one-dark": "^6.1.3",

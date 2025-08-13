@@ -29,7 +29,7 @@
         </n-card>
       </div>
 
-      <!-- 右侧：Tabs（场景、前置、后置） -->
+      <!-- 右侧：Tabs（场景、前置、后置、测试数据） -->
       <div class="right-panel" @dragover.prevent @drop="onDrop">
         <n-card size="small" :bordered="false">
           <n-tabs v-model:value="activeTab" type="line" animated>
@@ -112,6 +112,17 @@
                 </template>
               </Draggable>
             </n-tab-pane>
+            <n-tab-pane name="testdata" tab="测试数据">
+              <Codemirror
+                v-model="testDataCode"
+                :extensions="[json()]"
+                :style="{ height: '400px', border: '1px solid #eee' }"
+                placeholder="在这里编辑测试数据（JSON格式）..."
+                :autofocus="true"
+                :indent-with-tab="true"
+                :tab-size="4"
+              />
+            </n-tab-pane>
           </n-tabs>
         </n-card>
       </div>
@@ -125,6 +136,7 @@
   import { Codemirror } from 'vue-codemirror';
   import { sql } from '@codemirror/lang-sql';
   import { python } from '@codemirror/lang-python';
+  import { json } from '@codemirror/lang-json';
   import { oneDark } from '@codemirror/theme-one-dark'; // 可选主题
 
   const treeData = reactive([
@@ -155,7 +167,7 @@
     },
   ]);
 
-  const activeTab = ref<'scene' | 'pre' | 'post'>('scene');
+  const activeTab = ref<'scene' | 'pre' | 'post' | 'testdata'>('scene');
 
   // 场景和后置列表
   const sceneList = reactive([] as Array<{ id: string | number; name: string }>);
@@ -181,12 +193,8 @@
     return [lang, ...(Array.isArray(theme) ? theme : [theme])];
   });
 
-  // const extensionsSql = [sql(), oneDark];
-  // const extensionsPython = [python(), oneDark];
-  //
-  // const currentExtensions = computed(() => {
-  //   return preLanguage.value === 'sql' ? extensionsSql : extensionsPython;
-  // });
+  // 测试数据代码编辑
+  const testDataCode = ref('');
 
   const selectedKeys = ref<(string | number)[]>([]);
 
@@ -258,6 +266,10 @@
       preCode.value += `\n${comment}`;
     } else if (activeTab.value === 'post' && !postList.find((t) => t.id === obj.id)) {
       postList.push({ id: obj.id, name: obj.name });
+    } else if (activeTab.value === 'testdata') {
+      // 添加到测试数据作为JSON键值对示例
+      const addition = `,\n"${obj.name}": "test value for ${obj.id}"`;
+      testDataCode.value += addition;
     }
   }
 
@@ -265,7 +277,7 @@
   function removeTask(type: 'scene' | 'pre' | 'post', index: number) {
     if (type === 'scene') sceneList.splice(index, 1);
     if (type === 'post') postList.splice(index, 1);
-    // pre 没有列表，无需删除
+    // pre 和 testdata 没有列表，无需删除
   }
 </script>
 
